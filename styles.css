@@ -1,0 +1,38 @@
+:root { color-scheme: light dark; }
+* { box-sizing: border-box; }
+body {
+  margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji";
+  background: #0e0e0e; color: #f3f3f3;
+}
+.topbar {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: env(safe-area-inset-top) 16px 12px; background: #111; border-bottom: 1px solid #222;
+}
+.title { font-weight: 600; }
+.container { padding: 16px; display: grid; gap: 16px; max-width: 720px; margin: 0 auto; }
+.card { background: #151515; border: 1px solid #242424; border-radius: 16px; padding: 16px; }
+.h1 { margin: 0 0 4px; font-size: 20px; }
+.h2 { margin: 0 0 12px; font-size: 18px; }
+.sub { margin: 0; color: #b0b0b0; font-size: 14px; }
+.version-bar { display: flex; gap: 8px; margin: 12px 0; }
+.btn {
+  border: none; background: #2a2a2a; color: #fff; padding: 10px 14px; border-radius: 999px;
+  font-size: 14px;
+}
+.btn.active { background: #fff; color: #111; }
+.btn.outline { background: transparent; border: 1px solid #333; }
+.btn.small { padding: 6px 10px; font-size: 12px; }
+.player { margin: 12px 0; }
+.anchors { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.anchor {
+  padding: 8px 12px; background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 999px; white-space: nowrap;
+  font-size: 14px;
+}
+.anchor.active { background: #fff; color: #111; }
+.note { margin-top: 10px; color: #cfcfcf; font-size: 14px; min-height: 22px; }
+.quiz { display: grid; gap: 10px; }
+.quiz .q { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.footer { padding: 24px 16px; text-align: center; color: #8e8e8e; }
+@media (hover:hover) { .anchor:hover, .btn:hover { filter: brightness(1.08); } }
+
