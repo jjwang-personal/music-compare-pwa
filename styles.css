@@ -35,4 +35,12 @@ body {
 .quiz .q { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .footer { padding: 24px 16px; text-align: center; color: #8e8e8e; }
 @media (hover:hover) { .anchor:hover, .btn:hover { filter: brightness(1.08); } }
-
+.mode-toggle {
+  display: inline-flex; gap: 6px; padding: 6px; border: 1px solid #2a2a2a;
+  border-radius: 999px; background: #151515; margin-top: 10px;
+}
+.mode-toggle .seg {
+  background: transparent; border: none; color: #ccc; padding: 8px 12px; border-radius: 999px;
+  font-size: 13px;
+}
+.mode-toggle .seg.active { background: #fff; color: #111; }

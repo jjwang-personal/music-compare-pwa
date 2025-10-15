@@ -1,9 +1,15 @@
-// ======= 全局状态 =======
+// =====================
+// Music Compare · PWA
+// Spotlight Mode + YouTube Windowed A/B/C
+// =====================
+
+// ------- 全局状态 -------
 const state = {
   data: null,
   currentRecId: null,
   currentAnchorId: null,
   deferredPrompt: null,
+  mode: 'segments', // 'segments' | 'spots'
 };
 
 const els = {
@@ -14,34 +20,36 @@ const els = {
   installBtn: document.getElementById('installBtn'),
   shareBtn: document.getElementById('shareBtn'),
   playerHost: document.querySelector('.player'),
+  modeToggle: document.getElementById('modeToggle'),
 };
 
-// --- YouTube 播放相关 ---
+// ------- YouTube 播放相关 -------
 let ytPlayer = null;
 let currentRec = null;     // 当前版本（recording 对象）
-let windowStart = 15;      // 时间窗起点（秒）← 你可改
-let windowEnd   = 45;      // 时间窗终点（秒）← 你可改
+let windowStart = 15;      // 时间窗起点（秒）← 可改
+let windowEnd   = 45;      // 时间窗终点（秒）← 可改
 let loopTimer   = null;    // 维护时间窗循环
 
-// =========== 启动 ===========
+// =====================
+// 启动
+// =====================
 async function init() {
   try {
     const res = await fetch('data/bwv1007_prelude.json', { cache: 'no-cache' });
     state.data = await res.json();
 
     renderVersions();
-    renderAnchors();
+    renderAnchors();   // 根据 state.mode 渲染
     renderQuiz();
+    renderModeToggle();
 
-    // 播放器容器
     ensureYTContainer();
 
     // 默认当前录音
     state.currentRecId = state.data.recordings[0]?.id || null;
     currentRec = state.data.recordings[0] || null;
 
-    // 注入 YouTube API 并在回调中创建播放器
-    loadYouTubeAPI();
+    loadYouTubeAPI(); // 注入并创建播放器
   } catch (e) {
     console.error(e);
   }
@@ -62,11 +70,11 @@ async function init() {
 
   // 分享
   els.shareBtn.addEventListener('click', async () => {
-    const text = `我在对比 ${state.data?.work?.title || ''} 的不同演绎：${state.currentRecId} | 窗口 ${windowStart}–${windowEnd}s`;
+    const text = `我在对比 ${state.data?.work?.title || ''} · ${state.mode === 'spots' ? '代表性片段' : '整曲段落'} · 窗口 ${windowStart}–${windowEnd}s`;
     const url = location.href;
     if (navigator.share) {
       try { await navigator.share({ title: 'Music Compare', text, url }); }
-      catch { /* 用户取消 */ }
+      catch {}
     } else {
       await navigator.clipboard.writeText(`${text}\n${url}`);
       els.shareBtn.textContent = '已复制链接';
@@ -74,12 +82,21 @@ async function init() {
     }
   });
 
-  // 绑定版本/锚点事件到“同窗切换”和“窗移动”
+  // 绑定事件
   wireVersionBar();
   wireAnchors();
+
+  // 注册 SW
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(console.error);
+    });
+  }
 }
 
-// ======= UI 渲染 =======
+// =====================
+// UI 渲染
+// =====================
 function renderVersions() {
   els.versionBar.innerHTML = '';
   state.data.recordings.forEach(rec => {
@@ -92,22 +109,31 @@ function renderVersions() {
   syncActiveVersion();
 }
 
+function getCurrentAnchors() {
+  // 兼容旧结构：若有 anchors 就用 anchors，否则按模式分组
+  if (Array.isArray(state.data?.anchors)) return state.data.anchors;
+  if (state.mode === 'spots') return state.data?.spots || [];
+  return state.data?.segments || [];
+}
+
 function renderAnchors() {
+  const anchors = getCurrentAnchors();
   els.anchors.innerHTML = '';
-  state.data.anchors.forEach(a => {
+  anchors.forEach(a => {
     const chip = document.createElement('button');
     chip.className = 'anchor';
     chip.textContent = a.label;
     chip.dataset.id = a.id;
     els.anchors.appendChild(chip);
   });
-  // 默认显示第一个锚点提示
-  setMicroNote(state.data.anchors[0]?.id);
+  if (anchors[0]) setMicroNote(anchors[0].id);
+  state.currentAnchorId = null;
+  syncActiveAnchor();
 }
 
 function renderQuiz() {
   els.quiz.innerHTML = '';
-  state.data.quiz.forEach(q => {
+  (state.data.quiz || []).forEach(q => {
     const wrap = document.createElement('div');
     wrap.className = 'q';
     q.choices.forEach(choice => {
@@ -115,7 +141,7 @@ function renderQuiz() {
       btn.className = 'btn';
       btn.textContent = `${q.text}${choice}`;
       btn.addEventListener('click', () => {
-        console.log('quiz_submit', { qid: q.id, choice, rec: state.currentRecId, anchor: state.currentAnchorId });
+        console.log('quiz_submit', { qid: q.id, choice, rec: state.currentRecId, anchor: state.currentAnchorId, mode: state.mode });
         btn.classList.add('active');
         setTimeout(() => btn.classList.remove('active'), 600);
       });
@@ -125,8 +151,35 @@ function renderQuiz() {
   });
 }
 
+function renderModeToggle() {
+  if (!els.modeToggle) return;
+  els.modeToggle.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-mode]');
+    if (!btn) return;
+    const mode = btn.dataset.mode;
+    if (mode === state.mode) return;
+    setMode(mode);
+  });
+  syncModeToggle();
+}
+
+function setMode(mode) {
+  state.mode = mode;
+  state.currentAnchorId = null;
+  renderAnchors();
+  syncModeToggle();
+  console.log('mode_change', { mode });
+}
+
+function syncModeToggle() {
+  if (!els.modeToggle) return;
+  [...els.modeToggle.querySelectorAll('.seg')].forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === state.mode);
+  });
+}
+
 function setMicroNote(anchorId) {
-  const a = state.data.anchors.find(x => x.id === anchorId);
+  const a = getCurrentAnchors().find(x => x.id === anchorId);
   els.microNote.textContent = a?.note || '';
 }
 
@@ -141,7 +194,9 @@ function syncActiveAnchor() {
   });
 }
 
-// ======= 事件绑定 =======
+// =====================
+// 事件绑定
+// =====================
 function wireVersionBar() {
   els.versionBar.addEventListener('click', (e) => {
     const target = e.target.closest('button[data-id]');
@@ -150,6 +205,7 @@ function wireVersionBar() {
     if (id !== state.currentRecId) switchVersionSameWindow(id);
   });
 }
+
 function wireAnchors() {
   els.anchors.addEventListener('click', (e) => {
     const chip = e.target.closest('button[data-id]');
@@ -158,7 +214,9 @@ function wireAnchors() {
   });
 }
 
-// ======= YouTube 播放器工具 =======
+// =====================
+// YouTube 播放器工具
+// =====================
 function ensureYTContainer() {
   if (!els.playerHost) return;
   if (!document.getElementById('yt-container')) {
@@ -170,17 +228,14 @@ function ensureYTContainer() {
 }
 
 function loadYouTubeAPI() {
-  // 定义全局回调
   window.onYouTubeIframeAPIReady = function () {
     createYTPlayer();
   };
-  // 注入脚本（若已存在则跳过）
   if (![...document.scripts].some(s => s.src.includes('youtube.com/iframe_api'))) {
     const s = document.createElement('script');
     s.src = 'https://www.youtube.com/iframe_api';
     document.head.appendChild(s);
   } else {
-    // 已有 API，直接创建
     if (window.YT && window.YT.Player) createYTPlayer();
   }
 }
@@ -251,7 +306,9 @@ function seekWithinWindow(sec) {
   ytPlayer.playVideo();
 }
 
-// ======= 时间窗操作 =======
+// =====================
+// 时间窗操作
+// =====================
 function setWindow(startSec, endSec, keepRelative = true) {
   const prevStart = windowStart;
   const prevEnd   = windowEnd;
@@ -298,7 +355,7 @@ function switchVersionSameWindow(nextRecId) {
 
 // 点击锚点：把“时间窗”移动到该片段（没有 endSec 就默认 30s）
 function jumpToAnchorWindow(anchorId) {
-  const a = state.data.anchors.find(x => x.id === anchorId);
+  const a = getCurrentAnchors().find(x => x.id === anchorId);
   if (!a) return;
   state.currentAnchorId = anchorId;
 
@@ -308,14 +365,10 @@ function jumpToAnchorWindow(anchorId) {
 
   setMicroNote(anchorId);
   syncActiveAnchor();
-  console.log('seek_anchor_window', { anchorId, start, end, rec: state.currentRecId });
+  console.log('seek_anchor_window', { mode: state.mode, anchorId, start, end, rec: state.currentRecId });
 }
 
-// ======= Service Worker =======
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(console.error);
-  });
-}
-
+// =====================
+// 入口
+// =====================
 init();
