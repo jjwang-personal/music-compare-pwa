@@ -4,32 +4,20 @@
     {
       "id": "casals",
       "title": "Pau Casals",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/3/32/Bach_-_Cello_Suite_no._1_in_G_major%2C_BWV_1007_-_I._Pr%C3%A9lude.ogg",
-      "source": "Wikimedia Commons (public domain)",
-      "note": "Historic 1930s Casals recording, freely usable for educational/demo purposes."
+      "ytId": "iStjaHt1iMI",
+      "embed": "https://www.youtube.com/embed/iStjaHt1iMI"
     },
     {
       "id": "yoyoma",
       "title": "Yo-Yo Ma",
-      "url": "https://open.spotify.com/track/2x6ZrCItJPYbxKxmLwpxjl",
-      "embed": "https://open.spotify.com/embed/track/2x6ZrCItJPYbxKxmLwpxjl?utm_source=generator",
-      "source": "Spotify (preview or full playback for logged-in users)"
+      "ytId": "1prweT95Mo0",
+      "embed": "https://www.youtube.com/embed/1prweT95Mo0"
     },
     {
       "id": "bylsma",
       "title": "Anner Bylsma",
-      "url": "https://open.spotify.com/track/68RysHRPeCb9QCNTiUqArJ",
-      "embed": "https://open.spotify.com/embed/track/68RysHRPeCb9QCNTiUqArJ?utm_source=generator",
-      "source": "Spotify (preview or full playback for logged-in users)"
+      "ytId": "C6_OCn9o1CU",
+      "embed": "https://www.youtube.com/embed/C6_OCn9o1CU"
     }
-  ],
-  "anchors": [
-    { "id": "a1", "label": "开头拱形", "startSec": 0, "note": "Casals 自由舒展，Ma 稳定明亮，Bylsma 轻盈清晰。" },
-    { "id": "a2", "label": "推进段", "startSec": 22, "note": "Ma 的律动更舞蹈感；Casals 更歌唱；Bylsma 清脆跳跃。" },
-    { "id": "a3", "label": "低音持续", "startSec": 70, "note": "Casals 情感浓；Ma 收束优雅；Bylsma 带巴洛克式张力。" }
-  ],
-  "quiz": [
-    { "id": "q1", "text": "这一段更像：", "choices": ["更自由", "更稳定"] },
-    { "id": "q2", "text": "音色感觉更：", "choices": ["更温暖", "更透明"] }
   ]
 }
