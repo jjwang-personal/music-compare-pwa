@@ -12,21 +12,15 @@
 <body>
   <header class="topbar">
     <div class="title">Bach BWV 1007 — Prelude</div>
-    <button id="installBtn" class="btn small" hidden>安装 App</button>
   </header>
 
   <main class="container">
     <section class="card">
       <div class="work-head">
         <div>
-          <h1 class="h1">A/B/C 对比</h1>
-          <p class="sub">同段位一键切换版本；点锚点直达片段</p>
+          <h1 class="h1">整曲欣赏 · 统一段落对比</h1>
+          <p class="sub">选择一个段落来比较不同版本；或直接整曲播放，支持同一时间点切换版本</p>
         </div>
-        <button id="shareBtn" class="btn outline">分享对比卡</button>
-      </div>
-      <div class="mode-toggle" id="modeToggle">
-        <button data-mode="segments" class="seg active">整曲段落</button>
-        <button data-mode="spots" class="seg">代表性片段</button>
       </div>
 
       <div class="version-bar" id="versionBar">
@@ -34,31 +28,19 @@
       </div>
 
       <div class="player">
-        <audio id="player" controls preload="auto" playsinline></audio>
+        <!-- app.js 会在此处注入 YouTube 播放器 -->
       </div>
 
       <div class="anchors" id="anchors">
-        <!-- 动态渲染锚点 chips -->
-      </div>
-
-      <div class="note" id="microNote">
-        <!-- 当前锚点微导赏 -->
-      </div>
-    </section>
-
-    <section class="card">
-      <h2 class="h2">快速小问答</h2>
-      <div class="quiz" id="quiz">
-        <!-- 两个二选一问题，点击即记录 -->
+        <!-- 动态渲染锚点 chips（统一段落） -->
       </div>
     </section>
   </main>
 
   <footer class="footer">
-    <small>音频来源使用平台预览（示例），仅存导赏与特征。</small>
+    <small>音频来自 YouTube 官方渠道，本站仅用于教育/示范。</small>
   </footer>
 
   <script src="app.js" type="module"></script>
 </body>
 </html>
-
