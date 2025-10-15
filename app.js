@@ -159,8 +159,62 @@ function createYTPlayer() {
     width: '100%',
     videoId: getVideoId(currentRec),
     playerVars: { rel: 0, modestbranding: 1, autoplay: 1 },
-    events: { onReady: (e) => e.target.playVideo() }
+    events: { onReady: (e) => e.target.playVideo(), onStateChange: onPlayerStateChange }
   });
+}
+
+// --- 段落结束自动暂停（仅当选择了段落时） ---
+let endWatchTimer = null;
+
+function getSelectedSegment() {
+  if (!state.currentAnchorId) return null;
+  const segs = state.data?.segments || [];
+  return segs.find(s => s.id === state.currentAnchorId) || null;
+}
+
+function getSegmentEnd(startSec) {
+  const segs = state.data?.segments || [];
+  if (!Number.isFinite(startSec)) return null;
+  // 以“下一个段落的 startSec”作为当前段落的结束；若没有，则默认 +30s
+  const idx = segs.findIndex(s => Math.floor(s.startSec || 0) === Math.floor(startSec || 0));
+  if (idx >= 0 && idx + 1 < segs.length) {
+    const nextStart = Math.max(0, Math.floor(segs[idx + 1].startSec || 0));
+    // 至少保证有 1s 的长度
+    return Math.max(nextStart, Math.floor(startSec) + 1);
+  }
+  return Math.floor(startSec) + 30; // 默认 30 秒窗口
+}
+
+function onPlayerStateChange(e) {
+  if (e.data === YT.PlayerState.PLAYING) {
+    startEndWatch();
+  } else if (e.data === YT.PlayerState.PAUSED || e.data === YT.PlayerState.ENDED) {
+    stopEndWatch();
+  }
+}
+
+function startEndWatch() {
+  stopEndWatch();
+  endWatchTimer = setInterval(() => {
+    if (!ytPlayer || !ytPlayer.getCurrentTime) return;
+    const seg = getSelectedSegment();
+    if (!seg) return; // 未选择段落时不限制
+    const start = Math.max(0, Math.floor(seg.startSec || 0));
+    const end = getSegmentEnd(start);
+    const t = ytPlayer.getCurrentTime();
+    // 到达段落末尾时暂停（给一点余量）
+    if (end != null && t >= (end - 0.15)) {
+      ytPlayer.pauseVideo();
+      stopEndWatch();
+    }
+  }, 200);
+}
+
+function stopEndWatch() {
+  if (endWatchTimer) {
+    clearInterval(endWatchTimer);
+    endWatchTimer = null;
+  }
 }
 
 // =====================
@@ -173,12 +227,14 @@ function switchVersionSameTime(nextRecId) {
   const next = state.data.recordings.find(r => r.id === nextRecId);
   if (!next) return;
 
-  const curT = ytPlayer.getCurrentTime ? ytPlayer.getCurrentTime() : 0;
-  currentRec = next;
+  const anchor = (state.data.segments || []).find(x => x.id === state.currentAnchorId);
+  const curT = ytPlayer.getCurrentTime ? Math.floor(ytPlayer.getCurrentTime()) : 0;
+  const startFrom = anchor ? Math.max(0, Math.floor(anchor.startSec || 0)) : curT;
 
+  currentRec = next;
   ytPlayer.loadVideoById({
     videoId: getVideoId(next),
-    startSeconds: curT,
+    startSeconds: startFrom,
     suggestedQuality: 'large'
   });
 
@@ -195,6 +251,7 @@ function jumpToSegment(anchorId) {
   const start = Math.max(0, Math.floor(a.startSec || 0));
   ytPlayer.seekTo(start, true);
   ytPlayer.playVideo();
+  startEndWatch();
 
   syncActiveAnchor();
 }
