@@ -66,6 +66,15 @@ function renderVersions() {
 
 function renderSegments() {
   els.anchors.innerHTML = '';
+
+  // 添加“整曲播放（从头）”按钮（默认高亮）
+  const fullChip = document.createElement('button');
+  fullChip.className = 'anchor primary';
+  fullChip.textContent = '整曲播放（从头）';
+  fullChip.dataset.id = 'full_piece';
+  els.anchors.appendChild(fullChip);
+
+  // 渲染各段落 chips
   (state.data.segments || []).forEach(a => {
     const chip = document.createElement('button');
     chip.className = 'anchor';
@@ -73,6 +82,8 @@ function renderSegments() {
     chip.dataset.id = a.id;
     els.anchors.appendChild(chip);
   });
+
+  // 初始高亮（未选段时高亮整曲）
   syncActiveAnchor();
 }
 
@@ -88,8 +99,11 @@ function syncActiveVersion() {
   });
 }
 function syncActiveAnchor() {
-  [...els.anchors.children].forEach(chip => {
-    chip.classList.toggle('active', chip.dataset.id === state.currentAnchorId);
+  const chips = [...els.anchors.children];
+  chips.forEach(chip => {
+    const isFull = chip.dataset.id === 'full_piece';
+    const active = state.currentAnchorId ? (chip.dataset.id === state.currentAnchorId) : isFull;
+    chip.classList.toggle('active', active);
   });
 }
 
@@ -109,7 +123,12 @@ function wireAnchors() {
   els.anchors.addEventListener('click', (e) => {
     const chip = e.target.closest('button[data-id]');
     if (!chip) return;
-    jumpToSegment(chip.dataset.id);
+    const id = chip.dataset.id;
+    if (id === 'full_piece') {
+      playFullPieceFromStart();
+      return;
+    }
+    jumpToSegment(id);
   });
 }
 
@@ -270,6 +289,17 @@ function jumpToSegment(anchorId) {
   ytPlayer.playVideo();
   startEndWatch();
 
+  syncActiveAnchor();
+}
+
+// 退出分段模式：整曲从头播放
+function playFullPieceFromStart() {
+  state.currentAnchorId = null;   // 清空当前段落选择
+  if (typeof stopEndWatch === 'function') stopEndWatch(); // 停止段末暂停监控
+  if (ytPlayer) {
+    ytPlayer.seekTo(0, true);
+    ytPlayer.playVideo();
+  }
   syncActiveAnchor();
 }
 

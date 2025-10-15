@@ -60,3 +60,16 @@ body {
   font-size: 13px;
 }
 .mode-toggle .seg.active { background: #fff; color: #111; }
+
+/* Highlighted full-piece chip */
+.anchor.primary {
+  background: #4da3ff;
+  border-color: #6bb3ff;
+  color: #0c1b2a;
+  box-shadow: 0 0 10px rgba(77,163,255,0.35);
+}
+
+.anchor.primary.active {
+  background: #2d8eff;
+  color: #fff;
+}

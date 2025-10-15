@@ -1,47 +1,73 @@
-<!doctype html>
-<html lang="zh-CN">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Music Compare · PWA</title>
-  <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" content="#111111" />
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-  <header class="topbar">
-    <div class="title">Bach BWV 1007 — Prelude</div>
-  </header>
+// /Users/jingjuewang/music-compare-pwa/app.js
 
-  <main class="container">
-    <section class="card">
-      <div class="work-head">
-        <div>
-          <h1 class="h1">整曲欣赏 · 统一段落对比</h1>
-          <p class="sub">先选择一个版本；点击下方“整曲播放（从头）”可回到整曲模式，或选择某个段落进行对比</p>
-        </div>
-      </div>
+function renderSegments() {
+  els.anchors.innerHTML = '';
 
-      <div class="version-bar" id="versionBar">
-        <!-- 动态渲染：Casals / Yo-Yo Ma / Bylsma -->
-      </div>
+  // 添加“整曲播放（从头）”按钮（默认高亮）
+  const fullChip = document.createElement('button');
+  fullChip.className = 'anchor primary';
+  fullChip.textContent = '整曲播放（从头）';
+  fullChip.dataset.id = 'full_piece';
+  els.anchors.appendChild(fullChip);
 
-      <div class="player">
-        <!-- app.js 会在此处注入 YouTube 播放器 -->
-      </div>
+  // 渲染各段落
+  (state.data.segments || []).forEach(a => {
+    const chip = document.createElement('button');
+    chip.className = 'anchor';
+    chip.textContent = a.label || secLabel(a.startSec);
+    chip.dataset.id = a.id;
+    els.anchors.appendChild(chip);
+  });
 
-      <h2 class="h2" style="margin-top:12px;">选择：整曲或段落</h2>
-      <div class="anchors" id="anchors">
-        <!-- 动态渲染锚点 chips（统一段落） -->
-      </div>
-    </section>
-  </main>
+  // 初始高亮：如果尚未选择段落，则高亮“整曲播放”
+  syncActiveAnchor();
+}
 
-  <footer class="footer">
-    <small>音频来自 YouTube 官方渠道，本站仅用于教育/示范。</small>
-  </footer>
+function wireAnchors() {
+  els.anchors.addEventListener('click', (e) => {
+    const chip = e.target.closest('button[data-id]');
+    if (!chip) return;
+    const id = chip.dataset.id;
+    if (id === 'full_piece') {
+      playFullPieceFromStart();
+      return;
+    }
+    jumpToSegment(id);
+  });
+}
 
-  <script src="app.js" type="module"></script>
-</body>
-</html>
+/** 退出分段模式：整曲从头播放 */
+function playFullPieceFromStart() {
+  state.currentAnchorId = null;   // 清空当前段落选择
+  if (typeof stopEndWatch === 'function') stopEndWatch(); // 停止段末暂停监控
+  if (ytPlayer) {
+    ytPlayer.seekTo(0, true);
+    ytPlayer.playVideo();
+  }
+  syncActiveAnchor();
+}
+
+function syncActiveAnchor() {
+  const chips = [...els.anchors.children];
+  chips.forEach(chip => {
+    const isFull = chip.dataset.id === 'full_piece';
+    const active = state.currentAnchorId ? (chip.dataset.id === state.currentAnchorId) : isFull;
+    chip.classList.toggle('active', active);
+  });
+}
+
+
+// /Users/jingjuewang/music-compare-pwa/styles.css
+
+/* existing styles... */
+
+.anchor.primary {
+  background: #4da3ff;
+  border-color: #6bb3ff;
+  color: #0c1b2a;
+  box-shadow: 0 0 10px rgba(77,163,255,0.35);
+}
+.anchor.primary.active {
+  background: #2d8eff;
+  color: #fff;
+}
