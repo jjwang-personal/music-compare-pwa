@@ -6,8 +6,8 @@
     { "id": "bylsma",  "title": "Anner Bylsma","ytId": "C6_OCn9o1CU", "embed": "https://www.youtube.com/embed/C6_OCn9o1CU" }
   ],
   "segments": [
-    { "id": "segment_A", "label": "A · 开头拱形 (0–22 s)",     "startSec": 0,   "note": "从静到动的引入；对比自由与律动的拿捏。" },
-    { "id": "segment_C", "label": "C · 中段展开 (45–75 s)",    "startSec": 45,  "note": "能量峰值段；对比力度控制与句法处理。" },
-    { "id": "segment_E", "label": "E · 尾声收束 (108–138 s)", "startSec": 108, "note": "和声回落与终止；呼吸与张力收束。"}
+  { "id": "segment_A", "label": "A · 开头拱形 (0–22 s)",     "startSec": 0,   "endSec": 22,  "note": "从静到动的引入；对比自由与律动的拿捏。" },
+  { "id": "segment_C", "label": "C · 中段展开 (45–75 s)",    "startSec": 45,  "endSec": 75,  "note": "能量峰值段；对比力度控制与句法处理。" },
+  { "id": "segment_E", "label": "E · 尾声收束 (108–138 s)", "startSec": 108, "endSec": 138, "note": "和声回落与终止；呼吸与张力收束。"}
   ]
 }

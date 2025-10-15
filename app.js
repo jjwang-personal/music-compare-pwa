@@ -175,14 +175,29 @@ function getSelectedSegment() {
 function getSegmentEnd(startSec) {
   const segs = state.data?.segments || [];
   if (!Number.isFinite(startSec)) return null;
-  // 以“下一个段落的 startSec”作为当前段落的结束；若没有，则默认 +30s
-  const idx = segs.findIndex(s => Math.floor(s.startSec || 0) === Math.floor(startSec || 0));
-  if (idx >= 0 && idx + 1 < segs.length) {
-    const nextStart = Math.max(0, Math.floor(segs[idx + 1].startSec || 0));
-    // 至少保证有 1s 的长度
-    return Math.max(nextStart, Math.floor(startSec) + 1);
+
+  const cur = Math.floor(startSec || 0);
+
+  // 1) 优先使用明确的 endSec（与 startSec 匹配的分段）
+  const match = segs.find(s => Math.floor(s.startSec || 0) === cur && Number.isFinite(s.endSec));
+  if (match) {
+    const end = Math.floor(match.endSec);
+    return Math.max(end, cur + 1); // 至少 1 秒长度
   }
-  return Math.floor(startSec) + 30; // 默认 30 秒窗口
+
+  // 2) 没有 endSec：使用“下一个段落的 startSec”
+  const nextCandidates = segs
+    .map(s => Math.floor(s.startSec || 0))
+    .filter(s => s > cur);
+  if (nextCandidates.length > 0) {
+    const nextStart = Math.min(...nextCandidates);
+    return Math.max(nextStart, cur + 1);
+  }
+
+  // 3) 仍然没有：退回到视频总时长；拿不到则 +30s
+  const dur = (ytPlayer && ytPlayer.getDuration) ? Math.floor(ytPlayer.getDuration() || 0) : 0;
+  if (dur && dur > cur) return dur;
+  return cur + 30;
 }
 
 function onPlayerStateChange(e) {
@@ -228,8 +243,10 @@ function switchVersionSameTime(nextRecId) {
   if (!next) return;
 
   const anchor = (state.data.segments || []).find(x => x.id === state.currentAnchorId);
-  const curT = ytPlayer.getCurrentTime ? Math.floor(ytPlayer.getCurrentTime()) : 0;
-  const startFrom = anchor ? Math.max(0, Math.floor(anchor.startSec || 0)) : curT;
+  // 如果没有选择任何段落，切换版本时从整首开头开始播放（0s）
+  const startFrom = anchor
+    ? Math.max(0, Math.floor(anchor.startSec || 0))
+    : 0;
 
   currentRec = next;
   ytPlayer.loadVideoById({
