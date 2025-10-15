@@ -19,5 +19,14 @@
       "ytId": "C6_OCn9o1CU",
       "embed": "https://www.youtube.com/embed/C6_OCn9o1CU"
     }
+  ],
+  "anchors": [
+    { "id": "a1", "label": "开头拱形", "startSec": 0, "note": "线条舒展；自由与稳健差异明显。" },
+    { "id": "a2", "label": "推进段",   "startSec": 22, "note": "律动更强；颗粒与连贯对比。" },
+    { "id": "a3", "label": "低音持续", "startSec": 70, "note": "张力堆叠；收束气息各异。" }
+  ],
+  "quiz": [
+    { "id": "q1", "text": "这一段更像：", "choices": ["更自由", "更稳定"] },
+    { "id": "q2", "text": "音色感觉更：", "choices": ["更温暖", "更透明"] }
   ]
 }
